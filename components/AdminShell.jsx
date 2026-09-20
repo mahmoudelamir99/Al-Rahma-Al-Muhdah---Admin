@@ -153,7 +153,18 @@ export default function AdminShell({ user, admin, isSuperAdmin = false, children
   }, [mobileOpen, closeMobile]);
 
   const currentItem = NAV_ITEMS.find((item) => item.href === pathname);
-  const initial = (user?.email || "A").trim().charAt(0).toUpperCase();
+
+  /*
+   * الاسم المعروض في الترحيب/الأفاتار — بنجرّب بالترتيب:
+   *   1) admin.display_name (الاسم الحقي للموظف من جدول admins)
+   *   2) user.displayName (اللي بنمرّره من الـ layout)
+   *   3) أول حرف من الإيميل كحل أخير
+   * قبل كده كان بياخد الإيميل دايما، فالترحيب كان بيعرض إيميل المدير العام
+   * أو إيميل غريب بدل اسم الموظف اللي مسجّل دخول فعلاً.
+   */
+  const displayName = (admin?.display_name || user?.displayName || "").trim();
+  const emailForAvatar = user?.email || "";
+  const initial = (displayName || emailForAvatar || "A").trim().charAt(0).toUpperCase();
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-x-hidden bg-surface-200">
@@ -264,14 +275,11 @@ export default function AdminShell({ user, admin, isSuperAdmin = false, children
                   {initial}
                 </span>
                 <span className="hidden min-w-0 md:block">
-                  <span
-                    className="block max-w-[13rem] truncate text-[12.5px] font-bold leading-tight text-brand-900"
-                    dir="ltr"
-                  >
-                    {user?.email || "—"}
+                  <span className="block max-w-[13rem] truncate text-[12.5px] font-bold leading-tight text-brand-900">
+                    {displayName || user?.email || "—"}
                   </span>
-                  <span className="block text-[11.5px] font-bold leading-tight text-copper-700">
-                    مدير عام
+                  <span className="block max-w-[13rem] truncate text-[11.5px] font-bold leading-tight text-copper-700">
+                    {isSuperAdmin ? "مدير عام" : user?.email || "موظف"}
                   </span>
                 </span>
                 <LogoutButton variant="icon" />

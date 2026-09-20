@@ -103,6 +103,12 @@ export async function middleware(request) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  /*
+   * فيه كوكي جلسة سليمة → نودّيه للوحة.
+   * لاحظ: لو الموظف موقوف، الـ dashboard/layout هو اللي هيكتشف ده ويودّيه
+   * /suspended. إحنا هنا مش بنكرر الفحص عشان نفضل من غير نداء شبكة إضافي
+   * على كل تنقّل (ده اللي كان بيخلي اللوحة بطيئة).
+   */
   if (!isDashboard && user && pathname === "/") {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/dashboard";
@@ -114,5 +120,10 @@ export async function middleware(request) {
 }
 
 export const config = {
+  /*
+   * /suspended مش جوه الـ matcher عن قصد:
+   * عشان موظف موقوف لسه عنده كوكي جلسة يقدر يفتحها من غير ما الـ middleware
+   * يودّيه للوحة تاني ويعمل loop.
+   */
   matcher: ["/", "/dashboard/:path*"],
 };

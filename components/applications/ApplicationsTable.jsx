@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { IconInbox, IconAlert } from "@/components/icons";
 import { APPLICATION_STATUSES } from "@/lib/applications";
+import { formatDate } from "@/lib/format";
 import ApplicantModal, { StatusBadge } from "./ApplicantModal";
 
 /* ==========================================================================
@@ -14,25 +15,13 @@ import ApplicantModal, { StatusBadge } from "./ApplicantModal";
    - الفلترة كلها في المتصفح (البيانات محمّلة مرة واحدة) → إحساس فوري
    ========================================================================== */
 
-function formatDate(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-EG", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(value));
-  } catch {
-    return "—";
-  }
-}
-
 export default function ApplicationsTable({ applications = [] }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobFilter, setJobFilter] = useState("all");
   const [selected, setSelected] = useState(null);
-  const [rows, setRows] = useState(applications);
+  // 🛡️ حزام أمان: لو الوارد مش مصفوفة، بنشتغل على [] عشان الصفحة ما تنهارش
+  const [rows, setRows] = useState(Array.isArray(applications) ? applications : []);
 
   /* أسماء الوظائف للفلترة — مشتقة من الطلبات نفسها */
   const jobOptions = useMemo(() => {

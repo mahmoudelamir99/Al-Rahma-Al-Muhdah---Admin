@@ -6,6 +6,7 @@ import { IconClose, IconLoader, IconAlert, IconChat, IconUser } from "@/componen
 import { APPLICATION_STATUSES, statusMeta } from "@/lib/applications";
 import { updateApplicationHr, updateApplicationByHr } from "@/lib/actions/applications";
 import { FORM_FIELDS, READONLY_KEYS, SELECT_OPTIONS } from "@/lib/formFields";
+import { formatDateTime, formatNumber } from "@/lib/format";
 
 /* ==========================================================================
    نافذة التفاصيل الكاملة لمتقدّم (Applicant Profile)
@@ -48,21 +49,6 @@ export function StatusBadge({ status, size = "sm" }) {
   );
 }
 
-/** تنسيق التاريخ بالعربي */
-function formatDate(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-EG", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(value));
-  } catch {
-    return "—";
-  }
-}
 
 /** صف بيانات واحد (عنوان + قيمة) */
 function DataRow({ label, value, dir, wide }) {
@@ -117,7 +103,7 @@ function EditField({ field, value, onChange }) {
           <option value="">اختر...</option>
           {options.map((option) => (
             <option key={option} value={option}>
-              {field.key === "expected_salary" ? `${Number(option).toLocaleString("ar-EG")} ج.م` : option}
+              {field.key === "expected_salary" ? `${formatNumber(option)} ج.م` : option}
             </option>
           ))}
         </select>
@@ -286,7 +272,7 @@ export default function ApplicantModal({ application, onClose, onUpdated }) {
             <p className="mt-1 text-[12.5px] font-semibold text-brand-900/65">
               قدّم على: <span className="text-brand-900">{application.selected_job || "—"}</span>
               {" · "}
-              {formatDate(application.created_at)}
+              {formatDateTime(application.created_at)}
             </p>
           </div>
           <button
@@ -358,11 +344,11 @@ export default function ApplicantModal({ application, onClose, onUpdated }) {
                   label="أقل مرتب متوقع"
                   value={
                     application.expected_salary
-                      ? `${Number(application.expected_salary).toLocaleString("ar-EG")} ج.م`
+                      ? `${formatNumber(application.expected_salary)} ج.م`
                       : null
                   }
                 />
-                <DataRow label="تاريخ التقديم" value={formatDate(application.created_at)} />
+                <DataRow label="تاريخ التقديم" value={formatDateTime(application.created_at)} />
                 <DataRow label="الشركات السابقة" value={application.previous_companies} wide />
                 <DataRow label="الوظيفة المطلوبة" value={application.selected_job} wide />
               </dl>
@@ -665,7 +651,7 @@ export default function ApplicantModal({ application, onClose, onUpdated }) {
 
             {application.reviewed_by && (
               <p className="mt-3 border-t border-brand-200 pt-3 text-[12px] font-semibold text-brand-900/60">
-                آخر مراجعة: {application.reviewed_by} · {formatDate(application.reviewed_at)}
+                آخر مراجعة: {application.reviewed_by} · {formatDateTime(application.reviewed_at)}
               </p>
             )}
           </section>

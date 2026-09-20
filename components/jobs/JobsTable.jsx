@@ -4,24 +4,11 @@ import { useMemo, useState } from "react";
 import JobModal from "@/components/jobs/JobModal";
 import { IconLoader, IconBriefcase } from "@/components/icons";
 import { createJob, updateJob, deleteJob } from "@/lib/actions/jobs";
+import { formatDate, formatNumber } from "@/lib/format";
 
-/* تنسيق التاريخ بالعربي */
-function formatDate(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-EG", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(value));
-  } catch {
-    return "—";
-  }
-}
-
-/* تنسيق الراتب */
+/* تنسيق الراتب — formatNumber بتطلع نفس النص في السيرفر والمتصفح (بدون Intl) */
 function formatSalary(from, to) {
-  const n = (v) => (v == null ? null : Number(v).toLocaleString("en-US"));
+  const n = (v) => (v == null ? null : formatNumber(v));
   if (from == null && to == null) return "—";
   if (from != null && to != null) return `${n(from)} - ${n(to)} ج.م`;
   return `${n(from ?? to)} ج.م`;
@@ -42,7 +29,10 @@ function StatusBadge({ status }) {
   );
 }
 
-export default function JobsTable({ jobs }) {
+// 🛡️ jobs = [] مش رفاهية: لو القيمة وصلت undefined من السيرفر، السطر اللي بيعمل
+// jobs.filter() تحت بيمسك exception في المتصفح ويعمل "Client-side exception"
+// على الصفحة كلها. الـ default parameter بيمنع الانهيار ده تماماً.
+export default function JobsTable({ jobs = [] }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirmJob, setConfirmJob] = useState(null);
@@ -53,7 +43,9 @@ export default function JobsTable({ jobs }) {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return jobs.filter((job) => {
+    // حزام أمان إضافي: بنشتغل على مصفوفة مضمونة حتى لو الوارد مش مصفوفة
+    const list = Array.isArray(jobs) ? jobs : [];
+    return list.filter((job) => {
       const matchQuery =
         !q ||
         (job.title || "").toLowerCase().includes(q) ||
@@ -91,7 +83,10 @@ export default function JobsTable({ jobs }) {
     const result = await deleteJob(confirmJob.id);
     setBusyId(null);
     setConfirmJob(null);
-    showToast(result.ok ? result.message : result.error, result.ok ? "ok" : "err");
+    showToast(
+      result.ok ? result.message : result.error || "تعذّر حذف الوظيفة، جرّب تاني.",
+      result.ok ? "ok" : "err"
+    );
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createStaff, setStaffActive, updateStaffPermissions } from "@/lib/actions/staff";
+import { createStaff, setStaffActive, updateStaffPermissions, deleteStaff } from "@/lib/actions/staff";
 import { PERMISSION_KEYS, PERMISSION_LABELS, ACTION_KEYS, ACTION_LABELS, EMPTY_PERMISSIONS, normalizePermissions } from "@/lib/rbacConfig";
 
 const emptyPermissions = () => JSON.parse(JSON.stringify(EMPTY_PERMISSIONS));
@@ -67,6 +67,30 @@ export default function StaffPanel({ initialStaff = [] }) {
     });
   }
 
+  /*
+   * حذف الموظف — خطوة خطيرة، فبنطلب تأكيد صريح الأول.
+   * بنستخدم window.confirm عشان يفضل نفس أسلوب الصفحة (مفيش مكتبة مودال هنية)،
+   * والنص بيرّحب إن الحساب الدخول نفسه هيتمسح مش بس الصف.
+   */
+  function removeStaff(member) {
+    if (pending) return;
+    const label = member.display_name || member.email;
+    const confirmed = window.confirm(
+      `تحذير: هتحذف "${label}" نهائيًا.\n\nحساب الدخول هيمسح من Supabase Auth وكذلك صلاحياته من قاعدة البيانات.\nمفيش رجوع في الخطوة دي.\n\nمتأكد؟`
+    );
+    if (!confirmed) return;
+
+    setError(""); setNotice("");
+    startTransition(async () => {
+      const result = await deleteStaff(member.id);
+      if (!result?.ok) { setError(result?.error || "تعذّر حذف الموظف."); return; }
+      // بنشيله من القائمة فورًا من غير ما نستنى إعادة التحميل
+      setStaff((rows) => rows.filter((row) => row.id !== member.id));
+      if (editing?.id === member.id) setEditing(null);
+      setNotice(result.message);
+    });
+  }
+
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border-brand-200 bg-brand-50/60 p-4 sm:p-5">
@@ -107,6 +131,7 @@ export default function StaffPanel({ initialStaff = [] }) {
                 <div className="flex flex-wrap gap-2">
                   {!isSuper && <button type="button" onClick={() => toggleActive(member)} disabled={pending} className={`rounded-xl px-3 py-2 text-[12px] font-bold ${member.is_active ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>{member.is_active ? "إيقاف الحساب" : "تفعيل الحساب"}</button>}
                   {!isSuper && (editing?.id === member.id ? <button type="button" onClick={() => savePermissions(draft)} disabled={pending} className="rounded-xl bg-brand-700 px-3 py-2 text-[12px] font-bold text-white">حفظ الصلاحيات</button> : <button type="button" onClick={() => setEditing({ ...member, permissions: { ...member.permissions } })} disabled={pending} className="rounded-xl bg-surface-300 px-3 py-2 text-[12px] font-bold text-brand-900/80">تعديل الصلاحيات</button>)}
+                  {!isSuper && <button type="button" onClick={() => removeStaff(member)} disabled={pending} className="rounded-xl bg-rose-600 px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-rose-700 disabled:opacity-60">حذف</button>}
                 </div>
               </div>
               {!isSuper && <div className="mt-4"><PermissionList permissions={draft.permissions || emptyPermissions()} onChange={(permissions) => setEditing({ ...draft, permissions })} disabled={pending && editing?.id === member.id} /></div>}

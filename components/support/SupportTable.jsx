@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { IconLoader, IconAlert, IconInbox, IconUser } from "@/components/icons";
 import { REQUEST_TYPE_LABELS, SUPPORT_STATUSES, supportStatusMeta } from "@/lib/support";
 import { approveSupportRequest, rejectSupportRequest } from "@/lib/actions/support";
+import { formatDateTime } from "@/lib/format";
 
 /* ==========================================================================
    جدول طلبات الدعم الفني (للمدير العام)
@@ -32,21 +33,6 @@ const ROLE_LABELS = {
   admin: "موظف (Admin)",
 };
 
-function formatDate(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-EG", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(value));
-  } catch {
-    return "—";
-  }
-}
-
 /** صف بيان واحد */
 function DataRow({ label, value, dir }) {
   return (
@@ -60,6 +46,9 @@ function DataRow({ label, value, dir }) {
 }
 
 export default function SupportTable({ requests = [], canReview = true }) {
+  // 🛡️ حزام أمان: أي مصدر بيانات مش مصفوفة يتتعامل معاها كقائمة فاضية
+  // بدل ما تعمل Client-side exception على الصفحة كلها
+  const safeRequests = Array.isArray(requests) ? requests : [];
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState("");
@@ -68,14 +57,14 @@ export default function SupportTable({ requests = [], canReview = true }) {
   const [isPending, startTransition] = useTransition();
 
   const counts = useMemo(() => {
-    const c = { all: requests.length, pending: 0, approved: 0, rejected: 0 };
-    for (const r of requests) c[r.status] = (c[r.status] || 0) + 1;
+    const c = { all: safeRequests.length, pending: 0, approved: 0, rejected: 0 };
+    for (const r of safeRequests) c[r.status] = (c[r.status] || 0) + 1;
     return c;
-  }, [requests]);
+  }, [safeRequests]);
 
   const filtered = useMemo(
-    () => (statusFilter === "all" ? requests : requests.filter((r) => r.status === statusFilter)),
-    [requests, statusFilter]
+    () => (statusFilter === "all" ? safeRequests : safeRequests.filter((r) => r.status === statusFilter)),
+    [safeRequests, statusFilter]
   );
 
   function approve(request) {
@@ -165,10 +154,10 @@ export default function SupportTable({ requests = [], canReview = true }) {
             <IconInbox className="h-5 w-5" />
           </span>
           <p className="mt-3 text-[14.5px] font-bold text-brand-900/85">
-            {requests.length === 0 ? "مفيش طلبات دعم فني لسه" : "مفيش نتائج مطابقة"}
+            {safeRequests.length === 0 ? "مفيش طلبات دعم فني لسه" : "مفيش نتائج مطابقة"}
           </p>
           <p className="mt-1 text-[13px] font-semibold text-brand-900/65">
-            {requests.length === 0
+            {safeRequests.length === 0
               ? "الطلبات هتظهر هنا أول ما الموظفين يبعتوها من قسم «حسابي»."
               : "جرّب تغيّر الفلتر."}
           </p>
@@ -206,7 +195,7 @@ export default function SupportTable({ requests = [], canReview = true }) {
                   </span>
                 </div>
                 <p className="mt-2 text-[12px] font-semibold text-brand-900/55">
-                  {formatDate(request.created_at)}
+                  {formatDateTime(request.created_at)}
                 </p>
               </button>
             );
@@ -240,7 +229,7 @@ export default function SupportTable({ requests = [], canReview = true }) {
                     {REQUEST_TYPE_LABELS[selected.request_type] || selected.request_type}
                   </h3>
                   <p className="mt-0.5 text-[12.5px] font-semibold text-brand-900/60">
-                    {formatDate(selected.created_at)}
+                    {formatDateTime(selected.created_at)}
                   </p>
                 </div>
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-300 text-brand-900/60">×</span>
@@ -287,7 +276,7 @@ export default function SupportTable({ requests = [], canReview = true }) {
                   {selected.status !== "pending" && (
                     <>
                       <DataRow label="راجعه" value={selected.reviewed_by} dir="ltr" />
-                      <DataRow label="وقت المراجعة" value={formatDate(selected.reviewed_at)} />
+                      <DataRow label="وقت المراجعة" value={formatDateTime(selected.reviewed_at)} />
                       {selected.review_note && <DataRow label="سبب الرفض" value={selected.review_note} />}
                     </>
                   )}

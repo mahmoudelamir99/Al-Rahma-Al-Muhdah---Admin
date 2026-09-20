@@ -14,10 +14,25 @@ export const metadata = {
 
 export default async function DashboardLayout({ children }) {
   const context = await getCurrentAdminContext();
-  if (!context.ok) redirect(context.forceLogout ? "/auth/logout" : "/");
+
+  /*
+   * ترتيب الطرد مقصود:
+   *  - forceLogout → الحساب اتصفر باسوورد/اتغير، فالطرد عن طريق /auth/logout.
+   *  - suspended  → الموظف is_active = false → صفحة رسالة واضحة.
+   *  - غير كده   → شاشة الدخول زي المعتاد.
+   */
+  if (!context.ok) {
+    if (context.forceLogout) redirect("/auth/logout");
+    if (context.suspended) redirect("/suspended");
+    redirect("/");
+  }
 
   return (
-    <AdminShell user={{ email: context.user.email }} admin={context.admin} isSuperAdmin={context.isSuperAdmin}>
+    <AdminShell
+      user={{ email: context.user.email, displayName: context.admin?.display_name }}
+      admin={context.admin}
+      isSuperAdmin={context.isSuperAdmin}
+    >
       <SupportNotice notice={context.user.app_metadata?.support_notice} />
       {children}
     </AdminShell>
