@@ -3,7 +3,15 @@
 -- شغّل الملف ده في Supabase SQL Editor
 -- ============================================================
 
+create table if not exists public.admins (
+  id uuid primary key,
+  email text not null unique,
+  role text not null default 'admin',
+  created_at timestamptz not null default now()
+);
+
 alter table public.admins
+  add column if not exists display_name text;
   add column if not exists display_name text;
 
 alter table public.admins
