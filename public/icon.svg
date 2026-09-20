@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+ <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#141d31"/>
+      <stop offset="55%" stop-color="#0a1120"/>
+      <stop offset="100%" stop-color="#05070f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8e7b4"/>
+      <stop offset="50%" stop-color="#e8bd5c"/>
+      <stop offset="100%" stop-color="#b9822a"/>
+    </linearGradient>
+ </defs>
+ <rect width="64" height="64" rx="16" fill="url(#g)"/>
+ <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="rgba(232,189,92,0.35)" stroke-width="1.5"/>
+ <path d="M32 12l14.5 6v10.6C46.5 37 40.6 43.7 32 46.6 23.4 43.7 17.5 37 17.5 28.6V18L32 12z" fill="none" stroke="url(#gold)" stroke-width="2.4" stroke-linejoin="round"/>
+ <path d="M26.5 29.5v-3a5.5 5.5 0 0111 0v3" fill="none" stroke="url(#gold)" stroke-width="2.4" stroke-linecap="round"/>
+ <rect x="24.5" y="29.5" width="15" height="11" rx="3.2" fill="none" stroke="url(#gold)" stroke-width="2.4"/>
+</svg>
