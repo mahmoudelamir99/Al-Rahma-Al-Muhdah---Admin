@@ -360,6 +360,48 @@ table th {
   box-shadow: 0 0 0 3px rgba(169, 116, 88, 0.14);
 }
 
+/*
+ * 🧱 حقول موحّدة الشكل (Sprint 2 — Inputs Alignment)
+ * ---------------------------------------------------------------------------
+ * الكلاسات دي بتوحّد المقاس والحشوة ونصف القطر ونوع الخط لكل حقول الإدخال
+ * في اللوحة، عشان الحقول ميبقوش متفاوتين (بعضها كان بدون w-full أو بمقاس
+ * مختلف، والـ textareas كانت بارتفاعات عشوائية).
+ *
+ *   .field-input  → للحقول النصية/الرقمية/القوائم
+ *   .field-area   → للنصوص الطويلة (textarea) — بنفس عرض وحدود الحقل
+ *
+ * لازم تُستخدم مع .field-light عشان تأخد ألوان وتفاعلات النظام:
+ *   <input className="field-light field-input" />
+ */
+.field-input,
+.field-area {
+  display: block;
+  width: 100%;
+  border-radius: 0.75rem; /* rounded-xl موحّد */
+  padding: 0.625rem 0.875rem; /* px-3.5 py-2.5 */
+  font-size: 14px;
+  line-height: 1.5rem; /* نفس ارتفاع السطر للحقول والقوائم */
+  font-weight: 600;
+}
+
+/* الحقول من نوع <select> بتحتاج لون نص واضح + مؤشر */
+.field-input:is(select) {
+  cursor: pointer;
+}
+
+/* الـ textarea: نفس الشكل + ارتفاع أدنى معقول + resize رأسي بس */
+.field-area {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+/* في وضع عدم التعديل أو الانتظار يبان واضح إنه معطّل */
+.field-input:disabled,
+.field-area:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 /* إصلاح خلفية الإكمال التلقائي في كروم */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

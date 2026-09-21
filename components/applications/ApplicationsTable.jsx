@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { IconInbox, IconAlert } from "@/components/icons";
-import { APPLICATION_STATUSES } from "@/lib/applications";
+import { APPLICATION_STATUSES } from "@/lib/applicationsMeta";
 import { formatDate } from "@/lib/format";
 import ApplicantModal, { StatusBadge } from "./ApplicantModal";
 
@@ -96,7 +96,7 @@ export default function ApplicationsTable({ applications = [] }) {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="ابحث بالرقم القومي أو رقم التليفون أو الاسم…"
               aria-label="بحث في الطلبات"
-              className="field-light w-full rounded-2xl py-2.5 pl-4 pr-11 text-[14px]"
+              className="field-light field-input pr-11"
             />
           </div>
 
@@ -105,7 +105,7 @@ export default function ApplicationsTable({ applications = [] }) {
             value={jobFilter}
             onChange={(e) => setJobFilter(e.target.value)}
             aria-label="فلترة حسب الوظيفة"
-            className="field-light w-full rounded-2xl px-3.5 py-2.5 text-[14px] sm:w-56"
+            className="field-light field-input sm:w-56"
           >
             <option value="all">كل الوظائف</option>
             {jobOptions.map((job) => (

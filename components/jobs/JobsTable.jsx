@@ -99,12 +99,12 @@ export default function JobsTable({ jobs = [] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="ابحث باسم الوظيفة أو الشركة…"
-            className="field-light w-full rounded-2xl px-3.5 py-2.5 text-[14px] sm:max-w-xs"
+            className="field-light field-input sm:max-w-xs"
           />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="field-light w-full rounded-2xl px-3.5 py-2.5 text-[14px] sm:w-40"
+            className="field-light field-input sm:w-40"
           >
             <option value="all">كل الحالات</option>
             <option value="available">متاح</option>

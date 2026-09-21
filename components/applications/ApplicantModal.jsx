@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IconClose, IconLoader, IconAlert, IconChat, IconUser } from "@/components/icons";
-import { APPLICATION_STATUSES, statusMeta } from "@/lib/applications";
+import { APPLICATION_STATUSES, statusMeta } from "@/lib/applicationsMeta";
 import { updateApplicationHr, updateApplicationByHr } from "@/lib/actions/applications";
 import { FORM_FIELDS, READONLY_KEYS, SELECT_OPTIONS } from "@/lib/formFields";
 import { formatDateTime, formatNumber } from "@/lib/format";
@@ -586,7 +586,7 @@ export default function ApplicantModal({ application, onClose, onUpdated }) {
                 onChange={(e) => setDraft((d) => ({ ...d, hrNotes: e.target.value }))}
                 disabled={isPending}
                 placeholder="مثال: مطلوب صورة البطاقة + شهادة الخبرة…"
-                className="field-light mt-2 w-full resize-y rounded-xl px-3.5 py-2.5 text-[14px]"
+                className="field-light field-area mt-2"
               />
               <p className="mt-1 text-left text-[11.5px] text-brand-900/50" dir="ltr">
                 {draft.hrNotes.length} / 2000

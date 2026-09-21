@@ -137,8 +137,8 @@ export default function JobModal({ open, job, onClose, onSave }) {
   }
 
   const label = "mb-1.5 block text-[13px] font-bold text-brand-900";
-  const field =
-    "field-light w-full rounded-2xl px-3.5 py-2.5 text-[14px]";
+  // شكل موحّد لكل حقول المودال (Sprint 2)
+  const field = "field-light field-input";
 
   // حقل نصي عادي + داتاليست للاقتراحات (بيسرّع الإدخال المتكرر)
   const isAvailable = form.status !== "closed";
@@ -258,7 +258,7 @@ export default function JobModal({ open, job, onClose, onSave }) {
                 value={form.description}
                 onChange={set("description")}
                 placeholder="اكتب وصف مختصر لمهام الوظيفة"
-                className={`${field} resize-y`}
+                className="field-light field-area"
               />
             </div>
 

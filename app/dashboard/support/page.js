@@ -1,8 +1,7 @@
 import SupportTable from "@/components/support/SupportTable";
 import { listSupportRequests } from "@/lib/support";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { IconHeadset, IconAlert } from "@/components/icons";
-import { requirePermission } from "@/lib/rbac";
+import { getCurrentAdminContext, requirePermission } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 
 export const metadata = { title: "طلبات الدعم الفني | لوحة التحكم" };
@@ -22,13 +21,16 @@ export default async function SupportPage() {
     error = err?.message || "تعذّر تحميل الطلبات.";
   }
 
-  // هل المستخدم الحالي هو المدير العام؟ (المراجعة للمدير العام بس)
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const superEmail = (process.env.SUPER_ADMIN_EMAIL || "").toLowerCase();
-  const canReview = !superEmail || (user?.email || "").toLowerCase() === superEmail;
+  /*
+   * هل المستخدم الحالي هو المدير العام؟ (المراجعة للمدير العام بس)
+   * 🐛 إصلاح: قبل كده كان بيفحص إيميل متغير SUPERV_ADMIN_EMAIL بس، وده
+   * مش متسق مع `requireSuperAdminContext` اللي بيعد حساب role=super_admin
+   * كمان كمدير عام. النتيجة إن مدير عام حقي (بدور super_admin في القاعدة
+   * بس مش نفس الإيميل المضبوط في الـ env) ما كانش يقدر يراجع الطلبات.
+   * دلوقتي بنستخدم نفس السياق المركزي (getCurrentAdminContext).
+   */
+  const context = await getCurrentAdminContext();
+  const canReview = Boolean(context.ok && context.isSuperAdmin);
 
   return (
     <div className="space-y-6">

@@ -3,8 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IconLoader, IconAlert, IconInbox, IconUser } from "@/components/icons";
-import { REQUEST_TYPE_LABELS, SUPPORT_STATUSES, supportStatusMeta } from "@/lib/support";
-import { approveSupportRequest, rejectSupportRequest } from "@/lib/actions/support";
+import { REQUEST_TYPE_LABELS, SUPPORT_STATUSES, supportStatusMeta } from "@/lib/supportMeta";
+import { approveSupportRequest, rejectSupportRequest, revertSupportRequest, saveSupportInternalNote } from "@/lib/actions/support";
 import { formatDateTime } from "@/lib/format";
 
 /* ==========================================================================
@@ -54,6 +54,7 @@ export default function SupportTable({ requests = [], canReview = true }) {
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
   const [rejectNote, setRejectNote] = useState("");
+  const [adminNote, setAdminNote] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const counts = useMemo(() => {
@@ -95,6 +96,38 @@ export default function SupportTable({ requests = [], canReview = true }) {
       setDone(result.message || "تم رفض الطلب.");
       setSelected(null);
       setRejectNote("");
+    });
+  }
+
+  /* التراجع: إرجاع الطلب لـ «قيد الانتظار» */
+  function revert(request) {
+    if (isPending) return;
+    setError("");
+    setDone("");
+    startTransition(async () => {
+      const result = await revertSupportRequest(request.id);
+      if (!result?.ok) {
+        setError(result?.error || "تعذّر التراجع عن الطلب، جرّب تاني.");
+        return;
+      }
+      setDone(result.message || "تم إرجاع الطلب إلى قيد الانتظار.");
+      setSelected(null);
+    });
+  }
+
+  /* حفظ الملاحظة الإدارية الداخلية */
+  function saveAdminNote(request) {
+    if (isPending) return;
+    setError("");
+    setDone("");
+    startTransition(async () => {
+      const result = await saveSupportInternalNote(request.id, adminNote);
+      if (!result?.ok) {
+        setError(result?.error || "تعذّر حفظ الملاحظة، جرّب تاني.");
+        return;
+      }
+      setDone(result.message || "تم حفظ الملاحظة الإدارية.");
+      setSelected((current) => (current ? { ...current, internal_note: adminNote.trim() || null } : current));
     });
   }
 
@@ -175,6 +208,7 @@ export default function SupportTable({ requests = [], canReview = true }) {
                   setError("");
                   setDone("");
                   setRejectNote("");
+                  setAdminNote(request.internal_note || "");
                 }}
                 className="glass-light rounded-2xl p-4 text-right transition-shadow duration-150 hover:shadow-lift"
               >
@@ -283,6 +317,31 @@ export default function SupportTable({ requests = [], canReview = true }) {
                 </dl>
               </div>
 
+              {/* ===== الملاحظة الإدارية الداخلية (لا تظهر للموظف) ===== */}
+              {canReview && (
+                <div className="mt-3 rounded-2xl border-amber-200 bg-amber-50/60 p-4">
+                  <p className="text-[13px] font-extrabold text-amber-900">
+                    ملاحظة إدارية داخلية (لا تظهر للموظف)
+                  </p>
+                  <textarea
+                    value={adminNote}
+                    onChange={(e) => setAdminNote(e.target.value)}
+                    disabled={isPending}
+                    rows={2}
+                    className="field-light field-area mt-2"
+                    placeholder="ملاحظة للتوثيق الداخلي — مفيش حد من الموظفين هيشوفها…"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => saveAdminNote(selected)}
+                    disabled={isPending}
+                    className="mt-2.5 rounded-xl bg-amber-500 px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-amber-600 disabled:opacity-60"
+                  >
+                    حفظ الملاحظة
+                  </button>
+                </div>
+              )}
+
               {/* ===== الإجراءات ===== */}
               {selected.status === "pending" && canReview ? (
                 <div className="mt-4">
@@ -292,7 +351,7 @@ export default function SupportTable({ requests = [], canReview = true }) {
                       value={rejectNote}
                       onChange={(e) => setRejectNote(e.target.value)}
                       disabled={isPending}
-                      className="field-light mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-[14px]"
+                      className="field-light field-area mt-1.5"
                       placeholder="مثال: راجع مديرك الأول…"
                     />
                   </label>
@@ -339,19 +398,40 @@ export default function SupportTable({ requests = [], canReview = true }) {
                   </p>
                 </div>
               ) : (
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <span className="text-[13px] font-bold text-brand-900/60">
-                    {selected.status === "pending" && !canReview
-                      ? "المراجعة متاحة للمدير العام بس."
-                      : "الطلب اتراجع خلاص."}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelected(null)}
-                    className="rounded-xl bg-surface-300 px-4 py-2.5 text-[13px] font-bold text-brand-900/75 hover:bg-surface-400"
-                  >
-                    إغلاق
-                  </button>
+                <div className="mt-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13px] font-bold text-brand-900/60">
+                      {selected.status === "pending" && !canReview
+                        ? "المراجعة متاحة للمدير العام بس."
+                        : "الطلب اتراجع خلاص."}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {/* زرار التراجع: إرجاع الطلب المرفوض/المقبول لـ قيد الانتظار */}
+                      {selected.status !== "pending" && canReview && (
+                        <button
+                          type="button"
+                          onClick={() => revert(selected)}
+                          disabled={isPending}
+                          className="rounded-xl bg-sky-600 px-4 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-sky-700 disabled:opacity-60"
+                        >
+                          {isPending ? "جارٍ التراجع…" : "تراجع (إرجاع لقيد الانتظار)"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setSelected(null)}
+                        className="rounded-xl bg-surface-300 px-4 py-2.5 text-[13px] font-bold text-brand-900/75 hover:bg-surface-400"
+                      >
+                        إغلاق
+                      </button>
+                    </div>
+                  </div>
+                  {selected.status !== "pending" && canReview && (
+                    <p className="mt-2 flex items-start gap-1.5 text-[12px] font-semibold text-brand-900/55">
+                      <IconAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      التراجع بيفتح الطلب للمراجعة من جديد — لكنه مش بيعيد تنفيذ التغيير اللي اتتعمل قبل كده (الحمولة الحساسة بتُمسح بعد المراجعة).
+                    </p>
+                  )}
                 </div>
               )}
             </motion.div>

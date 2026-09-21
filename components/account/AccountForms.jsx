@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IconLoader } from "@/components/icons";
+import PasswordField from "@/components/PasswordField";
 import {
   requestEmailChange,
   requestPasswordChange,
@@ -16,7 +17,8 @@ import {
    1) السوبر أدمن  → تعديل **مباشر**: يكتب الباسورد الحالي والجديد (أو الإيميل
                      الجديد) ويدوس حفظ، والتغيير يتنفّذ فوراً (مفيش طلب).
    2) موظف عادي   → نظام **الطلبات**: يبعت طلب للدعم الفني بحالة (قيد الانتظار)،
-                     والمدير العام يراجعه قبل التنفيذ.
+                     والمدير العام يراجعه قبل التنفيذ. الموظف مش بيحتاج يكتب
+                     الباسورد القديم خالص (ممكن يكون ناسيه) — الجديد وتأكيده بس.
    ========================================================================== */
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,7 +33,8 @@ function Field({ label, hint, children }) {
   );
 }
 
-const inputClass = "field-light w-full rounded-xl px-3.5 py-2.5 text-[14px] font-semibold";
+// الشكل الموحّد للحقول (Sprint 2) — من globals.css عشان التناسق يبقى مضمون
+const inputClass = "field-light field-input";
 
 export default function AccountForms({ email, isSuperAdmin = false }) {
   const [tab, setTab] = useState("password");
@@ -56,7 +59,8 @@ export default function AccountForms({ email, isSuperAdmin = false }) {
   }
 
   function validatePassword() {
-    if (!currentPassword) return "اكتب كلمة المرور الحالية.";
+    // السوبر أدمن بس هو اللي بيكتب الباسورد الحالي (تعديل مباشر على نفسه)
+    if (isSuperAdmin && !currentPassword) return "اكتب كلمة المرور الحالية.";
     if (!newPassword || newPassword.length < 8) return "كلمة المرور الجديدة لازم تكون 8 أحرف على الأقل.";
     if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) return "كلمة المرور الجديدة لازم تحتوي حروف وأرقام.";
     if (newPassword !== confirmPassword) return "كلمة المرور الجديدة وتأكيدها مش متطابقين.";
@@ -161,39 +165,38 @@ export default function AccountForms({ email, isSuperAdmin = false }) {
       <div className="mt-5 space-y-4">
         {tab === "password" ? (
           <>
-            <Field label="كلمة المرور الحالية" hint="لازم تكون صحيحة عشان نقبل التغيير.">
-              <input
-                type="password"
-                dir="ltr"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                disabled={isPending}
-                className={inputClass}
-              />
-            </Field>
+            {/*
+             * حقل "كلمة المرور الحالية" بيظهر للسوبر أدمن بس (تعديل مباشر).
+             * الموظف العادي بيبعت طلب للإدارة، فمش منطقي نطلب منه الباسورد
+             * القديم — ممكن يكون ناسيه أصلاً.
+             */}
+            {isSuperAdmin && (
+              <Field label="كلمة المرور الحالية" hint="لازم تكون صحيحة عشان نقبل التغيير.">
+                <PasswordField
+                  value={currentPassword}
+                  onChange={setCurrentPassword}
+                  disabled={isPending}
+                  autoComplete="current-password"
+                  ariaLabel="كلمة المرور الحالية"
+                />
+              </Field>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="كلمة المرور الجديدة" hint="8 أحرف على الأقل، فيها حروف وأرقام.">
-                <input
-                  type="password"
-                  dir="ltr"
-                  autoComplete="new-password"
+                <PasswordField
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={setNewPassword}
                   disabled={isPending}
-                  className={inputClass}
+                  ariaLabel="كلمة المرور الجديدة"
                 />
               </Field>
               <Field label="تأكيد كلمة المرور الجديدة">
-                <input
-                  type="password"
-                  dir="ltr"
-                  autoComplete="new-password"
+                <PasswordField
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={setConfirmPassword}
                   disabled={isPending}
-                  className={inputClass}
+                  ariaLabel="تأكيد كلمة المرور الجديدة"
                 />
               </Field>
             </div>
@@ -213,14 +216,12 @@ export default function AccountForms({ email, isSuperAdmin = false }) {
               />
             </Field>
             <Field label="كلمة المرور الحالية" hint="للتأكيد إنك صاحب الحساب.">
-              <input
-                type="password"
-                dir="ltr"
-                autoComplete="current-password"
+              <PasswordField
                 value={emailPassword}
-                onChange={(e) => setEmailPassword(e.target.value)}
+                onChange={setEmailPassword}
                 disabled={isPending}
-                className={inputClass}
+                autoComplete="current-password"
+                ariaLabel="كلمة المرور الحالية"
               />
             </Field>
           </>
@@ -235,7 +236,7 @@ export default function AccountForms({ email, isSuperAdmin = false }) {
               onChange={(e) => setMessage(e.target.value)}
               disabled={isPending}
               placeholder="أي توضيح إضافي…"
-              className={`${inputClass} resize-y`}
+              className="field-light field-area"
             />
           </Field>
         )}

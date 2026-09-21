@@ -42,14 +42,36 @@ function BrandMark() {
 const NAV_ITEM_BASE =
   "group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-[14.5px] font-bold transition-colors duration-150";
 
+/**
+ * 🐛 إصلاح (Sprint 3 — Sidebar Dynamic):
+ * الفلتر كان بيفحص `permissions?.[permission] === true`، لكن الصلاحيات مخزّنة
+ * ككائن متداخل { jobs: { view: true, ... } مش boolean. فالنتيجة إن الشرط
+ * كان بيطلع false دايمًا لأي موظف عادي — يعني التاب يختفي من عنده حتى لو
+ * عنده صلاحية العرض. النتيجة عجلة: الموظف يشوف بس التابين اللي ملهمش
+ * صلاحية (الرئيسية/حسابي) ومش يشوف باقي الأقسام اللي هو مسموح له بيها.
+ *
+ * الإصلاح: نفحص صلاحية **العرض (view)** بالتحديد، وهي المعيار الصحيح لظهور
+ * التاب. المدير العام يشوف الكل، والأقسام اللي من غير صلاحية معرّفة (زي
+ * الرئيسية وحسابي) تظهر للجميع.
+ */
+function canSeeNavItem(item, permissions, isSuperAdmin) {
+  if (isSuperAdmin) return true;
+  /*
+   * صفحة الموظفين والصلاحيات (staff) محمية على السيرفر بـ requireSuperAdminContext،
+   * يعني الموظف العادي مستحيل يفتحها. عشان القائمة تبقى صادقة مع الصلاحيات
+   * الفعلية، بنخفي التاب ده عن غير المدير العام حتى لو عنده صلاحية staff.view.
+   */
+  if (item.href === "/dashboard/staff") return false;
+  const permission = permissionForPath(item.href);
+  if (!permission) return true; // الرئيسية/حسابي — مش مربوطين بصلاحية
+  return permissions?.[permission]?.view === true;
+}
+
 /** محتوى القائمة — مستخدم في الديسكستوب وفي درج الموبايل */
 function NavList({ pathname, onNavigate, permissions = {}, isSuperAdmin = false }) {
   return (
     <nav className="space-y-1.5" aria-label="القائمة الرئيسية">
-      {NAV_ITEMS.filter((item) => {
-        const permission = permissionForPath(item.href);
-        return isSuperAdmin || !permission || permissions?.[permission] === true;
-      }).map((item) => {
+      {NAV_ITEMS.filter((item) => canSeeNavItem(item, permissions, isSuperAdmin)).map((item) => {
         const active = pathname === item.href;
         return (
           <Link
