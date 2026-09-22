@@ -20,6 +20,19 @@ const TEXT_FIELDS = [
 const ABOUT_CONTACT_FIELDS = TEXT_FIELDS.slice(2);
 const SOCIAL_FIELDS = [["facebook", "فيسبوك"], ["linkedin", "لينكد إن"], ["instagram", "إنستجرام"], ["youtube", "يوتيوب"]];
 
+/*
+ * مميزات قسم "من نحن" — 3 كروت، كل كارت له عنوان ونص.
+ * الأيقونة واللون مش هنا لأنهم ثابتين في الموقع (About.jsx) حسب الترتيب.
+ */
+const FEATURE_FIELDS = [
+  ["feature1Title", "عنوان الميزة 1"],
+  ["feature1Text", "نص الميزة 1"],
+  ["feature2Title", "عنوان الميزة 2"],
+  ["feature2Text", "نص الميزة 2"],
+  ["feature3Title", "عنوان الميزة 3"],
+  ["feature3Text", "نص الميزة 3"],
+];
+
 function Field({ label, value, onChange, multiline = false, type = "text" }) {
   // شكل موحّد لكل الحقول (Sprint 2) — نفس مقاس حقل الرفع والحقول التانية
   const base = "field-light mt-1.5";
@@ -68,6 +81,14 @@ export default function CmsPanel({ initialSettings = {} }) {
     contactEmail: initialSettings.contact_email || "",
     contactAddress: initialSettings.contact_address || "",
     socialLinks: initialSettings.social_links || {},
+    // قسم المميزات (3 كروت) + مفتاح الإظهار/الإخفاء
+    featuresEnabled: initialSettings.features_enabled ?? true,
+    feature1Title: initialSettings.feature_1_title || "",
+    feature1Text: initialSettings.feature_1_text || "",
+    feature2Title: initialSettings.feature_2_title || "",
+    feature2Text: initialSettings.feature_2_text || "",
+    feature3Title: initialSettings.feature_3_title || "",
+    feature3Text: initialSettings.feature_3_text || "",
   });
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
@@ -87,6 +108,20 @@ export default function CmsPanel({ initialSettings = {} }) {
       </div>
     </section>
     <section className="rounded-2xl bg-surface-200/70 p-4"><h2 className="text-sm font-extrabold text-brand-900">من نحن وبيانات التواصل</h2><div className="mt-3 grid gap-4 sm:grid-cols-2">{ABOUT_CONTACT_FIELDS.map(([key, label]) => <Field key={key} label={label} value={values[key]} onChange={(v) => set(key, v)} multiline={key === "aboutText" || key === "contactAddress"} type={key === "contactEmail" ? "email" : "text"} />)}</div></section>
+    <section className="rounded-2xl bg-surface-200/70 p-4">
+      <h2 className="text-sm font-extrabold text-brand-900">قسم المميزات (تحت من نحن)</h2>
+      <p className="mt-1 text-[12.5px] font-semibold text-brand-900/60">
+        الكروت الثلاثة اللي بتظهر تحت نص «من نحن» على الموقع. عدّل العنوان والنص، أو اقفل القسم كله من المفتاح تحت.
+      </p>
+      <div className="mt-3">
+        <Toggle label="إظهار قسم المميزات على الموقع" checked={values.featuresEnabled} onChange={(v) => set("featuresEnabled", v)} />
+      </div>
+      <div className={`mt-4 grid gap-4 transition-opacity sm:grid-cols-2 ${values.featuresEnabled ? "" : "pointer-events-none opacity-50"}`}>
+        {FEATURE_FIELDS.map(([key, label]) => (
+          <Field key={key} label={label} value={values[key]} onChange={(v) => set(key, v)} />
+        ))}
+      </div>
+    </section>
     <section className="rounded-2xl bg-surface-200/70 p-4"><h2 className="text-sm font-extrabold text-brand-900">السوشيال ميديا</h2><div className="mt-3 grid gap-4 sm:grid-cols-2">{SOCIAL_FIELDS.map(([key, label]) => <Field key={key} label={label} value={values.socialLinks[key]} onChange={(v) => set("socialLinks", { ...values.socialLinks, [key]: v })} type="url" />)}</div></section>
     <section className="rounded-2xl bg-surface-200/70 p-4"><Field label="الشروط والأحكام" value={values.termsText} onChange={(v) => set("termsText", v)} multiline /></section>
     {(error || message) && <p role={error ? "alert" : undefined} className={`rounded-xl p-3 text-sm font-bold ${error ? "bg-rose-50 text-rose-800" : "bg-emerald-50 text-emerald-800"}`}>{error || `✓ ${message}`}</p>}

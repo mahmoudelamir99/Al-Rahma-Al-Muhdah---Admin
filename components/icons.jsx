@@ -26,6 +26,50 @@ export function IconInbox({ className = base }) {
   );
 }
 
+/** بريد — رسائل الزوار */
+export function IconMail({ className = base }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2.4" stroke="currentColor" strokeWidth="1.6" />
+      <path d="m3.6 7 8.4 5.6L20.4 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** أرشيف — صندوق ملفات (ليستة التنقل وصفحة الأرشيف) */
+export function IconArchive({ className = base }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="3.5" y="4" width="17" height="5" rx="1.8" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M5 9v8.6A2.4 2.4 0 007.4 20h9.2A2.4 2.4 0 0019 17.6V9" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M10 13h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** حذف — سلة مهملات */
+export function IconTrash({ className = base }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4.5 6.5h15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9 6.5V5a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0115 5v1.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M6.5 6.5l.8 12A2 2 0 009.3 20.4h5.4a2 2 0 002-1.9l.8-12" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M10.5 10v6M13.5 10v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** استعادة — سهم بيلف (إرجاع من الأرشيف) */
+export function IconRestore({ className = base }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4.5 12a7.5 7.5 0 107.5-7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M12 1.8v5.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9.2 4.5L12 1.8l2.8 2.7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function IconChat({ className = base }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
@@ -182,6 +226,8 @@ export function NavIcon({ name, className }) {
     layout: IconLayout,
     briefcase: IconBriefcase,
     inbox: IconInbox,
+    archive: IconArchive,
+    mail: IconMail,
     headset: IconHeadset,
     users: IconUsers,
     user: IconUser,

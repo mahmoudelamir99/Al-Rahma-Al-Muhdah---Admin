@@ -78,6 +78,26 @@ comment on column public.job_applications.completion_fields is
   'أسماء حقول الفورم اللي الـ HR طلب من العامل استكمالها (بيتفتح للعامل بس)';
 
 -- ------------------------------------------------------------
+--  6) نظام الأرشيف (Soft Delete)
+--     الحذف بقى "ناعم": بنسجّل وقت الحذف ومين اللي حذف بدل ما الصف
+--     يتمسح نهائي، فالبيانات تفضل محفوظة في "الأرشيف" ويقدر المدير
+--     العام يستعيدها أو يحذفها نهائيًا.
+--     مفتاح التوافق: deleted_at = null يعني الطلب في القائمة الرئيسية.
+-- ------------------------------------------------------------
+alter table public.job_applications
+  add column if not exists deleted_at timestamptz;
+
+alter table public.job_applications
+  add column if not exists deleted_by text;
+
+comment on column public.job_applications.deleted_at is
+  'وقت حذف الطلب ناعماً (null = موجود في القائمة الرئيسية، مش null = في الأرشيف)';
+
+comment on column public.job_applications.deleted_by is
+  'إيميل الموظف اللي حذف الطلب — بيظهر في الأرشيف للمراجعة';
+
+
+-- ------------------------------------------------------------
 --  5) فهارس
 -- ------------------------------------------------------------
 create index if not exists job_applications_status_idx
@@ -85,6 +105,10 @@ create index if not exists job_applications_status_idx
 
 create index if not exists job_applications_national_id_idx
   on public.job_applications (national_id);
+
+-- فهرس للأرشيف: بنفلتر على deleted_at كثير (القائمة الرئيسية والأرشيف)
+create index if not exists job_applications_deleted_at_idx
+  on public.job_applications (deleted_at);
 
 
 -- ============================================================

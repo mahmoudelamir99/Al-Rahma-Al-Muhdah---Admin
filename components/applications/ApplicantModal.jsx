@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { IconClose, IconLoader, IconAlert, IconChat, IconUser } from "@/components/icons";
+import { IconClose, IconLoader, IconAlert, IconChat, IconUser, IconTrash } from "@/components/icons";
 import { APPLICATION_STATUSES, statusMeta } from "@/lib/applicationsMeta";
-import { updateApplicationHr, updateApplicationByHr } from "@/lib/actions/applications";
+import { updateApplicationHr, updateApplicationByHr, softDeleteApplication } from "@/lib/actions/applications";
 import { FORM_FIELDS, READONLY_KEYS, SELECT_OPTIONS } from "@/lib/formFields";
 import { formatDateTime, formatNumber } from "@/lib/format";
 
@@ -126,11 +126,16 @@ function EditField({ field, value, onChange }) {
 /** الحقول المتاحة للتحديد — كل حقول الفورم ماعدا حقول الهوية */
 const SELECTABLE_FIELDS = FORM_FIELDS.filter((f) => !READONLY_KEYS.has(f.key));
 
-export default function ApplicantModal({ application, onClose, onUpdated }) {
+export default function ApplicantModal({ application, onClose, onUpdated, onDeleted, archived = false }) {
   const [draft, setDraft] = useState(() => toDraft(application));
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  /* ---- حالة نقل الطلب للأرشيف (Soft Delete) ---- */
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   /* ---- حالة فورم التعديل اليدوي لبيانات العامل ---- */
   const [editOpen, setEditOpen] = useState(false);
@@ -239,6 +244,25 @@ export default function ApplicantModal({ application, onClose, onUpdated }) {
       onUpdated?.(result.application);
       setTimeout(() => setSaved(false), 2500);
     });
+  }
+
+  /** نقل الطلب للأرشيف (Soft Delete) — البيانات تفضل محفوظة وقابلة للاستعادة */
+  function confirmDelete() {
+    if (deleteBusy) return;
+    setDeleteError("");
+    setDeleteBusy(true);
+    (async () => {
+      const result = await softDeleteApplication(application.id);
+      if (!result?.ok) {
+        setDeleteError(result?.error || "تعذّر نقل الطلب للأرشيف.");
+        setDeleteBusy(false);
+        return;
+      }
+      // بنبلّغ الجدول يشيل الصف من القائمة الرئيسية فوراً
+      onDeleted?.(application.id);
+      setDeleteBusy(false);
+      onClose();
+    })();
   }
 
   if (!application) return null;
@@ -653,6 +677,78 @@ export default function ApplicantModal({ application, onClose, onUpdated }) {
               <p className="mt-3 border-t border-brand-200 pt-3 text-[12px] font-semibold text-brand-900/60">
                 آخر مراجعة: {application.reviewed_by} · {formatDateTime(application.reviewed_at)}
               </p>
+            )}
+
+            {/* -------- منطقة الخطر: نقل الطلب للأرشيف (مخفية في وضع الأرشيف) -------- */}
+            {!archived && (
+            <div className="mt-4 rounded-2xl border-rose-200 bg-rose-50/60 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-extrabold text-rose-900">نقل الطلب للأرشيف</p>
+                  <p className="mt-0.5 text-[12px] font-semibold leading-relaxed text-rose-900/75">
+                    الطلب مش هيتحذف نهائًا — بينتقل للأرشيف وتقدر تستعيده في أي وقت.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setDeleteError(""); setDeleteOpen(true); }}
+                  disabled={isPending || deleteBusy}
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl border-rose-300 bg-white px-3.5 py-2 text-[13px] font-bold text-rose-700 transition-colors duration-150 hover:bg-rose-100 disabled:opacity-50"
+                >
+                  <IconTrash className="h-4 w-4" />
+                  حذف
+                </button>
+              </div>
+
+              {/* تأكيد الحذف — خطوة واحدة مقصودة تمنع الحذف بالغلط */}
+              <AnimatePresence initial={false}>
+                {deleteOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 rounded-xl border-rose-200 bg-white p-3.5">
+                      <p className="text-[13px] font-bold text-rose-900">
+                        متأكد إنك عايز تنقل الطلب للأرشيف؟
+                      </p>
+                      {deleteError && (
+                        <p role="alert" className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-[12.5px] font-bold text-rose-800">
+                          {deleteError}
+                        </p>
+                      )}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={confirmDelete}
+                          disabled={deleteBusy}
+                          className="flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[13px] font-bold text-white transition-colors duration-150 hover:bg-rose-700 disabled:opacity-60"
+                        >
+                          {deleteBusy ? (
+                            <>
+                              <IconLoader className="h-4 w-4 animate-spin" />
+                              جاري النقل…
+                            </>
+                          ) : (
+                            "نعم، نقل للأرشيف"
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteOpen(false)}
+                          disabled={deleteBusy}
+                          className="rounded-xl bg-surface-300 px-4 py-2 text-[13px] font-bold text-brand-900/80 transition-colors duration-150 hover:bg-surface-400 disabled:opacity-60"
+                        >
+                          إلغاء
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             )}
           </section>
         </div>

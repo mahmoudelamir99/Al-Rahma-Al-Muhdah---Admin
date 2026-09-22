@@ -87,6 +87,11 @@ alter table public.job_applications add column if not exists hr_notes text;
 alter table public.job_applications add column if not exists reviewed_by text;
 alter table public.job_applications add column if not exists reviewed_at timestamptz;
 
+-- الأرشيف (Soft Delete): deleted_at بيحدد إذا كان الطلب محذوف ناعماً
+-- (موجود في الأرشيف) ولا لسه في القائمة الرئيسية.
+alter table public.job_applications add column if not exists deleted_at timestamptz;
+alter table public.job_applications add column if not exists deleted_by text;
+
 alter table public.job_applications drop constraint if exists job_applications_age_check;
 alter table public.job_applications add constraint job_applications_age_check check (age between 18 and 70);
 alter table public.job_applications drop constraint if exists job_applications_status_check;
@@ -97,6 +102,7 @@ create index if not exists job_applications_created_at_idx on public.job_applica
 create index if not exists job_applications_status_idx on public.job_applications(status);
 create index if not exists job_applications_national_id_idx on public.job_applications(national_id);
 create index if not exists job_applications_job_idx on public.job_applications(selected_job);
+create index if not exists job_applications_deleted_at_idx on public.job_applications(deleted_at);
 alter table public.job_applications enable row level security;
 
 -- ------------------------------------------------------------
@@ -133,11 +139,28 @@ create table if not exists public.site_settings (
   contact_email text,
   contact_address text,
   social_links jsonb not null default '{}'::jsonb,
+  features_enabled boolean not null default true,
+  feature_1_title text,
+  feature_1_text text,
+  feature_2_title text,
+  feature_2_text text,
+  feature_3_title text,
+  feature_3_text text,
   updated_at timestamptz not null default now(),
   updated_by text,
   constraint site_settings_singleton check (id = 1)
 );
 insert into public.site_settings(id) values(1) on conflict(id) do nothing;
+
+-- ترقية آمنة لو الجدول كان موجود قبل إضافة قسم المميزات
+alter table public.site_settings add column if not exists features_enabled boolean not null default true;
+alter table public.site_settings add column if not exists feature_1_title text;
+alter table public.site_settings add column if not exists feature_1_text text;
+alter table public.site_settings add column if not exists feature_2_title text;
+alter table public.site_settings add column if not exists feature_2_text text;
+alter table public.site_settings add column if not exists feature_3_title text;
+alter table public.site_settings add column if not exists feature_3_text text;
+
 alter table public.site_settings enable row level security;
 
 -- ------------------------------------------------------------

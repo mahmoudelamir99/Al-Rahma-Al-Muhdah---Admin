@@ -69,6 +69,13 @@ export default function ApplicationsTable({ applications = [] }) {
     setSelected((current) => (current ? { ...current, ...updated } : current));
   }
 
+  /* لما الطلب ينتقل للأرشيف، بنشيله من الجدول فوراً */
+  function handleDeleted(id) {
+    if (!id) return;
+    setRows((current) => current.filter((row) => row.id !== id));
+    setSelected(null);
+  }
+
   const resetFilters = () => {
     setQuery("");
     setStatusFilter("all");
@@ -292,6 +299,7 @@ export default function ApplicationsTable({ applications = [] }) {
           application={selected}
           onClose={() => setSelected(null)}
           onUpdated={handleUpdated}
+          onDeleted={handleDeleted}
         />
       )}
     </div>

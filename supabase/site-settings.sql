@@ -31,6 +31,25 @@ comment on column public.site_settings.map_enabled is
 comment on column public.site_settings.terms_text is
   'نص الشروط والأحكام — بيتعرض في صفحة /terms على الموقع';
 
+-- ------------------------------------------------------------
+--  قسم المميزات (Features) اللي تحت "من نحن"
+--  3 كروت، كل كارت له عنوان ونص. الأدمن يقدر يعدّلهم من اللوحة
+--  أو يخفي القسم بالكامل بمفتاح features_enabled.
+-- ------------------------------------------------------------
+alter table public.site_settings add column if not exists features_enabled   boolean not null default true;
+alter table public.site_settings add column if not exists feature_1_title    text;
+alter table public.site_settings add column if not exists feature_1_text     text;
+alter table public.site_settings add column if not exists feature_2_title    text;
+alter table public.site_settings add column if not exists feature_2_text     text;
+alter table public.site_settings add column if not exists feature_3_title    text;
+alter table public.site_settings add column if not exists feature_3_text     text;
+
+comment on column public.site_settings.features_enabled is
+  'إظهار/إخفاء قسم المميزات بالكامل في قسم من نحن';
+comment on column public.site_settings.feature_1_title is 'عنوان الميزة الأولى (المميزات في قسم من نحن)';
+comment on column public.site_settings.feature_2_title is 'عنوان الميزة الثانية';
+comment on column public.site_settings.feature_3_title is 'عنوان الميزة الثالثة';
+
 -- الصف الوحيد الافتراضي (لو مش موجود)
 alter table public.site_settings add column if not exists hero_title text;
 alter table public.site_settings add column if not exists hero_subtitle text;

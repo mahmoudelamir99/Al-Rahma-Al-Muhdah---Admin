@@ -41,6 +41,15 @@ set
   -- السوشيال ميديا (نبدأ بكائن فاضي لو مش موجود)
   social_links     = coalesce(social_links, '{}'::jsonb),
 
+  -- قسم المميزات (3 كروت) — نفس النصوص الافتراضية اللي في الكود
+  features_enabled = coalesce(features_enabled, true),
+  feature_1_title  = coalesce(nullif(feature_1_title, ''), 'مجاني تماماً'),
+  feature_1_text   = coalesce(nullif(feature_1_text, ''),  'لا توجد اي رسوم تماما للباحثين عن عمل'),
+  feature_2_title  = coalesce(nullif(feature_2_title, ''), 'شركات كبرى'),
+  feature_2_text   = coalesce(nullif(feature_2_text, ''),  'تعاقدات مع شركات عالمية في مصر'),
+  feature_3_title  = coalesce(nullif(feature_3_title, ''), 'بيئة آمنة'),
+  feature_3_text   = coalesce(nullif(feature_3_text, ''),  'ضمان بيئة عمل مستقرة ومحترمة'),
+
   updated_at       = now(),
   updated_by       = coalesce(updated_by, 'seed-script')
 where id = 1;
