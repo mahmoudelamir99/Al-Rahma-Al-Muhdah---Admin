@@ -57,7 +57,8 @@ const EMPTY = {
   status: "available",
   location: "",
   schedule: "",
-  employment_type: "دوام كامل",
+  // نوع الدوام اختياري — بيبدأ فاضي عشان الأدمن مش مجبر يكتبه
+  employment_type: "",
 };
 
 /**
@@ -90,7 +91,7 @@ export default function JobModal({ open, job, onClose, onSave }) {
         status: job.status ?? "available",
         location: job.location ?? "",
         schedule: job.schedule ?? "",
-        employment_type: job.employment_type ?? "دوام كامل",
+        employment_type: job.employment_type ?? "",
       });
     } else {
       setForm(EMPTY);
@@ -421,7 +422,7 @@ export default function JobModal({ open, job, onClose, onSave }) {
                 id="job-type"
                 value={form.employment_type}
                 onChange={set("employment_type")}
-                placeholder="دوام كامل"
+                placeholder="مثال: دوام كامل (اختياري)"
                 className={field}
               />
             </div>
